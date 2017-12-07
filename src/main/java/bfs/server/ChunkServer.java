@@ -48,10 +48,14 @@ public class ChunkServer {
             Printer.println(rmi);
             Naming.bind(rmi,chunkServer);
 
+            String masterRMI ="rmi://127.0.0.1:8888/master";
+
             IMasterService masterService =(IMasterService) Naming.lookup("rmi://127.0.0.1:8888/master");
 
 
             masterService.registerChunkServer(properties);
+
+            Printer.println("register to master "+masterRMI + " succcess");
 
         } catch (RemoteException e) {
             e.printStackTrace();

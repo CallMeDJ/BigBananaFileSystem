@@ -27,7 +27,7 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
    *
    *   复制份数,单位为份,默认主+副本个数为3
    */
-    public static int copySize = 1;
+    public static int copySize = 3;
 
     /*
      *
@@ -248,7 +248,7 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
                         for(ChunkServerProperties propertie : serverProperties){
                           IChunkServerService chunkServer = self.chunkServerBundles.get(propertie.getServerIpPort());
 
-                            try {
+                        try {
                                 String md5 = chunkServer.getChunkMD5(chunkId);
                                 if(md5.equals(self.chunkMD5Map.get(chunkId))){
                                     rightServer = chunkServer;
@@ -260,6 +260,7 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
                             } catch (RemoteException e) {
                                 e.printStackTrace();
                             }
+                        }
 
                         if(rightServer == null){
                             self.log("chunkId" + chunkId + "in file" + file + "destoryed");
@@ -276,7 +277,6 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
 
 
                             }
-                        }
                         }
 
                     }

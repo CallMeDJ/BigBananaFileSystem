@@ -5,17 +5,14 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import bfs.domian.ClientResponseBundle;
-import bfs.domian.ServerState;
-import bfs.domian.ChunkLog;
-import bfs.domian.ChunkServerProperties;
-import bfs.domian.ChunkToChunkServerPair;
-import bfs.domian.ClientRequestBundle;
+import bfs.domian.*;
 import bfs.service.IChunkServerService;
 import bfs.service.IMasterService;
 import bfs.utils.Printer;
@@ -44,6 +41,8 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
 
     public Map<String,List<ChunkServerProperties>> chunkServerMap = new HashMap<String,List<ChunkServerProperties>>();
 
+    public Map<String,String> chunkMD5Map = new HashMap<String,String>();
+
     public List<String> namespace = new ArrayList<String>();
 
 
@@ -55,6 +54,7 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
         super();
         self = this;
     }
+
 
 
     @Override
@@ -124,6 +124,17 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
         response.setChunkToServerMap(pairs);
         return response;
     }
+
+    @Override
+    public ClientResponseBundle md5(ClientRequestBundle request) throws RemoteException {
+
+        this.chunkMD5Map.put(request.getChunkId(),request.getMd5());
+
+        ClientResponseBundle responseBundle = new ClientResponseBundle();
+
+        return null;
+    }
+
 
 
     @Override
@@ -214,6 +225,73 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
         return chunkServers;
 
     }
+
+
+    @Override
+    public void checkSum() throws RemoteException {
+       Runnable check = new Runnable() {
+           @Override
+           public void run() {
+            Printer.println("checking md5");
+               for (String file : self.namespace) {
+                   List<String> chunkIds = self.fileChunkMap.get(file);
+
+                   Set<String> rightFile = new HashSet<String>();
+                   Set<String> wrong = new HashSet<String>();
+
+                    for(String chunkId : chunkIds){
+                       List<ChunkServerProperties> serverProperties = self.chunkServerMap.get(chunkId);
+
+                        IChunkServerService rightServer = null;
+                        Set<ChunkServerProperties> worngServer = new HashSet<ChunkServerProperties>();
+
+                        for(ChunkServerProperties propertie : serverProperties){
+                          IChunkServerService chunkServer = self.chunkServerBundles.get(propertie.getServerIpPort());
+
+                            try {
+                                String md5 = chunkServer.getChunkMD5(chunkId);
+                                if(md5.equals(self.chunkMD5Map.get(chunkId))){
+                                    rightServer = chunkServer;
+                                }
+                                else {
+                                    worngServer.add(propertie);
+                                }
+
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+
+                        if(rightServer == null){
+                            self.log("chunkId" + chunkId + "in file" + file + "destoryed");
+                        }
+                        else {
+                            for (ChunkServerProperties worngProperty : worngServer) {
+                                IChunkServerService currentWrongServer = self.chunkServerBundles.get(propertie.getServerIpPort());
+                                try {
+                                    currentWrongServer.storeChunk(rightServer.getChunk(chunkId),chunkId);
+
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
+
+
+                            }
+                        }
+                        }
+
+                    }
+
+
+               }
+           }
+       };
+
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleAtFixedRate(check,0,3,TimeUnit.SECONDS);
+    }
+
+
+
 
 
     @Override

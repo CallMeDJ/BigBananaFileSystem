@@ -2,6 +2,7 @@ package bfs.service;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Map;
 
 import bfs.domian.ServerState;
 
@@ -25,4 +26,7 @@ public interface IChunkServerService extends Remote {
       int getOccupiedSpace() throws RemoteException;
 
       void setOccupiedSpace(int occupiedSpace) throws RemoteException ;
+
+     String getChunkMD5(String chunkId) throws RemoteException ;
+
     }

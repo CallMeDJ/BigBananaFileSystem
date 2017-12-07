@@ -27,7 +27,12 @@ public interface IMasterService extends Remote{
 
      ClientResponseBundle get(ClientRequestBundle request) throws RemoteException ;
 
-     void registerChunkServer(ChunkServerProperties chunkServer)
+    ClientResponseBundle md5(ClientRequestBundle request) throws RemoteException ;
+
+    void checkSum() throws RemoteException ;
+
+
+    void registerChunkServer(ChunkServerProperties chunkServer)
          throws RemoteException, NotBoundException, MalformedURLException;
 
     void gc()  throws RemoteException ;

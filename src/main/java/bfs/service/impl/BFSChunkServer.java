@@ -2,12 +2,16 @@ package bfs.service.impl;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import bfs.domian.ServerState;
 import bfs.domian.BFSChunk;
 import bfs.service.IChunkServerService;
+import bfs.utils.MD5Util;
 import bfs.utils.Printer;
 
 /**
@@ -32,6 +36,12 @@ public class BFSChunkServer extends UnicastRemoteObject implements IChunkServerS
     }
 
     @Override
+    public String getChunkMD5(String chunkId) {
+        return MD5Util.encode(this.chunks.get(chunkId).getFile());
+    }
+
+
+    @Override
     public String toString(){
     return "server "+ip+" ',totalSpace is "+totalSpace+" ,usedSpace is"+usedSpace;
     }
@@ -53,13 +63,15 @@ public class BFSChunkServer extends UnicastRemoteObject implements IChunkServerS
         return (this.usedSpace+this.getOccupiedSpace()/this.totalSpace) <= 0.9D;
     }
 
+
     @Override
     public void storeChunk(byte[] file , String chunkId) throws RemoteException {
 
         BFSChunk chunk = new BFSChunk();
-        chunk.chunkId = chunkId;
-        chunk.file = file;
-        int chunkByte = chunk.file.length;
+        chunk.setChunkId(chunkId);
+        chunk.setFile(file);
+
+        int chunkByte = chunk.getFile().length;
         if(this.usedSpace + chunkByte > totalSpace){
             throw new RemoteException("disk is full");
         }
@@ -75,7 +87,7 @@ public class BFSChunkServer extends UnicastRemoteObject implements IChunkServerS
         if(chunk == null) {
             return null;
         }
-        return chunk.file;
+        return chunk.getFile();
     }
 
     @Override
@@ -84,11 +96,15 @@ public class BFSChunkServer extends UnicastRemoteObject implements IChunkServerS
     }
 
 
+
+
+
+
     @Override
     public void deletChunk(String chunkId){
         if(this.chunks.containsKey(chunkId)) {
             BFSChunk chunk = chunks.get(chunkId);
-            int chunkByte = chunk.file.length;
+            int chunkByte = chunk.getFile().length;
             this.usedSpace -= chunkByte;
             this.chunks.remove(chunkId);
             Printer.println(this.ip + " delete file "+chunkId+" success! and totalSpace is "+ totalSpace +" ,usedSpace is "+usedSpace+" byte");

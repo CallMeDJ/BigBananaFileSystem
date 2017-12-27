@@ -267,7 +267,7 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
                         }
                         else {
                             for (ChunkServerProperties worngProperty : worngServer) {
-                                IChunkServerService currentWrongServer = self.chunkServerBundles.get(propertie.getServerIpPort());
+                                IChunkServerService currentWrongServer = self.chunkServerBundles.get(worngProperty.getServerIpPort());
                                 try {
                                     currentWrongServer.storeChunk(rightServer.getChunk(chunkId),chunkId);
 

@@ -36,11 +36,12 @@ public class ChunkServer {
 
             String ip = args[0];
             String port = args[1];
+            Integer totalSpace = args[2] == null ? 100 :Integer.valueOf(args[2]);
             ChunkServerProperties properties = new ChunkServerProperties();
             properties.setIp(ip);
             properties.setPort(port);
 
-            IChunkServerService chunkServer = new BFSChunkServer(100,0,"/",ip);
+            IChunkServerService chunkServer = new BFSChunkServer(totalSpace,0,"/",ip);
 
             LocateRegistry.createRegistry(Integer.parseInt(port));
 

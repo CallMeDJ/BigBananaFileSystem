@@ -232,7 +232,7 @@ public class BFSMaster extends UnicastRemoteObject implements IMasterService{
        Runnable check = new Runnable() {
            @Override
            public void run() {
-            Printer.println("checking md5");
+            //Printer.println("checking md5");
                for (String file : self.namespace) {
                    List<String> chunkIds = self.fileChunkMap.get(file);
 
